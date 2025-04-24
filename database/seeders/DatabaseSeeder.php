@@ -17,8 +17,8 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         Role::create([
-            'name' => 'Student',
-            'slug' => 'Student',
+            'name' => 'Worker',
+            'slug' => 'Worker',
             'description'=>'description details'
         ]);
 
@@ -29,3 +29,4 @@ class DatabaseSeeder extends Seeder
         ]);
     }
 }
+

@@ -2,79 +2,73 @@
 
 namespace App\Http\Controllers;
 
-
-use App\Http\Controllers\Controller;
-use App\Models\Role;
 use App\Models\User;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    public function register(Request $request): JsonResponse
-{
-    $validated = $request->validate([
-        'name' => ['required', 'string', 'max:255'],
-        'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-        'password' => ['required', 'string', 'min:8', 'confirmed'],
-        'password_confirmation' => ['required', 'string', 'min:8'], // Just required, no 'confirmed'
-    ]);
-    
-
-    $validated['password'] = Hash::make($validated['password']);
-    
-    // Assign a default role for new registrations
-    // $validated['role_id'] = Role::where('name', 'Client')->first()->id; // or whatever default role
-
-    
-    $user = User::create($validated);
-
-    // Optionally auto-login the user
-    $token = $user->createToken('auth-token')->plainTextToken;
-
-    return response()->json([
-        'message' => 'Registration successful',
-        'user' => $user->load('role'),
-        'token' => $token
-    ], 201);
-}
-
-    public function login(Request $request): JsonResponse
+    // ✅ Register a new user
+    public function register(Request $request)
     {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
+        $fields = $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|string|email|unique:users,email',
+            'password' => 'required|string|min:6|confirmed',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::create([
+            'name'     => $fields['name'],
+            'email'    => $fields['email'],
+            'password' => Hash::make($fields['password']),
+        ]);
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'user'  => $user,
+            'token' => $token,
+        ], 201);
+    }
+
+    // ✅ Login a user
+    public function login(Request $request)
+    {
+        $fields = $request->validate([
+            'email'    => 'required|string|email',
+            'password' => 'required|string',
+        ]);
+
+        $user = User::where('email', $fields['email'])->first();
+
+        if (!$user || !Hash::check($fields['password'], $user->password)) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
 
-        $token = $user->createToken('auth-token')->plainTextToken;
+        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
+            'user'  => $user,
             'token' => $token,
-            'user' => $user->load('role'),
-        ]);
+        ], 200);
     }
 
-    public function logout(Request $request): JsonResponse
+    // ✅ Logout (revoke current token)
+    public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
 
-        return response()->json(['message' => 'Logged out successfully']);
+        return response()->json([
+            'message' => 'Logged out successfully',
+        ]);
     }
 
-    public function user_info(Request $request): JsonResponse
+    // ✅ Get current authenticated user info
+    public function user_info(Request $request)
     {
-        return response()->json([
-            'user' => $request->user()->load('role')
-        ]);
+        return response()->json($request->user());
     }
 }

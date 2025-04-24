@@ -10,8 +10,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | Requests from the following domains / hosts will receive stateful API
-    | authentication cookies. Typically, these should include your local
-    | and production domains which access your API via a frontend SPA.
+    | authentication cookies. These are typically used for front-end SPAs.
+    | For token-based authentication, you don't need stateful domains.
     |
     */
 
@@ -27,13 +27,12 @@ return [
     |--------------------------------------------------------------------------
     |
     | This array contains the authentication guards that will be checked when
-    | Sanctum is trying to authenticate a request. If none of these guards
-    | are able to authenticate the request, Sanctum will use the bearer
-    | token that's present on an incoming request for authentication.
+    | Sanctum is trying to authenticate a request. For stateless token-based
+    | authentication, ensure your API guard is set to 'api'.
     |
     */
 
-    'guard' => ['web'],
+    'guard' => ['api'], // Ensure you're using the 'api' guard for token-based authentication
 
     /*
     |--------------------------------------------------------------------------
@@ -41,23 +40,19 @@ return [
     |--------------------------------------------------------------------------
     |
     | This value controls the number of minutes until an issued token will be
-    | considered expired. This will override any values set in the token's
-    | "expires_at" attribute, but first-party sessions are not affected.
+    | considered expired. Setting this to null means tokens will not expire.
     |
     */
 
-    'expiration' => null,
+    'expiration' => null,  // Tokens do not expire unless manually revoked
 
     /*
     |--------------------------------------------------------------------------
     | Token Prefix
     |--------------------------------------------------------------------------
     |
-    | Sanctum can prefix new tokens in order to take advantage of numerous
-    | security scanning initiatives maintained by open source platforms
-    | that notify developers if they commit tokens into repositories.
-    |
-    | See: https://docs.github.com/en/code-security/secret-scanning/about-secret-scanning
+    | Sanctum can prefix new tokens in order to add security by helping
+    | prevent accidental exposure in repositories or elsewhere.
     |
     */
 
@@ -68,16 +63,15 @@ return [
     | Sanctum Middleware
     |--------------------------------------------------------------------------
     |
-    | When authenticating your first-party SPA with Sanctum you may need to
-    | customize some of the middleware Sanctum uses while processing the
-    | request. You may change the middleware listed below as required.
+    | Since you are using stateless authentication, we don't need the middleware
+    | related to session management or cookies. You can safely remove the 
+    | `encrypt_cookies` and `validate_csrf_token` middleware here.
     |
     */
 
     'middleware' => [
-        'authenticate_session' => Laravel\Sanctum\Http\Middleware\AuthenticateSession::class,
-        'encrypt_cookies' => Illuminate\Cookie\Middleware\EncryptCookies::class,
-        'validate_csrf_token' => Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+        // No session-related middleware, using stateless authentication
+        'authenticate_session' => Laravel\Sanctum\Http\Middleware\AuthenticateSession::class, // Optional if you plan to have stateful requests in the future
     ],
 
 ];

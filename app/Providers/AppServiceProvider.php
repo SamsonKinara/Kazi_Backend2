@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Route;
+use App\Http\Middleware\CorsMiddleware;
 use Illuminate\Support\Facades\Schema;
 
 class AppServiceProvider extends ServiceProvider
@@ -26,7 +28,11 @@ class AppServiceProvider extends ServiceProvider
      * Bootstrap any application services.
      */
     public function boot(): void
-    {
+    {  // Apply CORS middleware globally for API routes
+        Route::middleware([CorsMiddleware::class])->group(function () {
+            Route::apiResource('users', UserController::class);
+        }); // Closing the middleware group
+
         // Fixes for any migrations or database issues (e.g., length of string columns)
         Schema::defaultStringLength(191);
 
